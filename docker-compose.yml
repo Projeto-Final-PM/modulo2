@@ -1,0 +1,39 @@
+services:
+  mongo:
+    image: mongo:latest
+    hostname: mongo
+    container_name: mongo
+    restart: unless-stopped
+    environment:
+      - "TZ=America/Sao_Paulo"
+    ports: ["27017:27017"]
+    networks:
+      - gateway-network
+  gateway:
+    image: gateway/gateway:latest
+    hostname: gateway
+    container_name: gateway
+    ports: ["8080:8080"]
+    environment:
+      LOGIN_URI: http://login:8081
+      MODULE1_URI: http://module1:8082
+    networks:
+      - gateway-network
+    depends_on:
+      mongo:
+        condition: service_started
+  login:
+    image: gateway/login:latest
+    hostname: login
+    container_name: login
+    ports: ["8081:8081"]
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/fatec
+    networks:
+      - fretec-network
+    depends_on:
+      mongo:
+        condition: service_started
+networks:
+  fretec-network:
+    driver: bridge
